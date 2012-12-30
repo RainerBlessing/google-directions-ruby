@@ -5,9 +5,10 @@ require 'google_directions'
 class GoogleDirections
   
   def initialize(location_1, location_2)
-    @base_url = "http://maps.google.com/maps/api/directions/xml?key=#{GOOGLE_MAPS_API_KEY}&sensor=false&"
-    @location_1 = location_1
-    @location_2 = location_2
+    @base_url = "http://maps.google.com/maps/api/directions/xml?sensor=false&"
+
+    @location_1 = URI.encode location_1
+    @location_2 = URI.encode location_2
     options = "origin=#{transcribe(@location_1)}&destination=#{transcribe(@location_2)}"
     @xml_call = @base_url + options
     @status = find_status
@@ -43,17 +44,23 @@ class GoogleDirections
     end
   end
 
-  def distance_in_miles
+  def distance
     if @status != "OK"
-      distance_in_miles = 0
+      meters = 0
     else
       doc = Nokogiri::XML(xml)
-      meters = doc.css("distance value").last.text
-      distance_in_miles = (meters.to_f / 1610.22).round
-      distance_in_miles
+      meters = doc.css("distance value").last.text.to_f
     end
   end
-  
+
+  def distance_in_miles
+    distance / 1610.22
+  end
+
+  def distance_in_km
+    distance / 1000
+  end
+
   def status
     @status
   end
